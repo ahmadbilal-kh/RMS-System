@@ -1,4 +1,8 @@
-import { readDemoState, writeDemoState } from "../data/demoData";
+import {
+  defaultSettings,
+  readDemoState,
+  writeDemoState,
+} from "../data/demoData";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 const sameOriginApi = configuredApiUrl === "/";
@@ -59,6 +63,13 @@ function persistDemo(update) {
   const state = { ...readDemoState(), ...update };
   writeDemoState(state);
   return state;
+}
+
+function normalizeSettings(settings) {
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
+    throw new Error("Restaurant settings could not be loaded from the API.");
+  }
+  return { ...defaultSettings, ...settings };
 }
 
 export const api = {
@@ -433,20 +444,22 @@ export const api = {
     return (await request("/api/menu/" + id, { method: "DELETE" })).items;
   },
   async settings() {
-    if (demoMode) return readDemoState().settings;
-    return (await request("/api/settings")).settings;
+    if (demoMode) return normalizeSettings(readDemoState().settings);
+    return normalizeSettings((await request("/api/settings")).settings);
   },
   async updateSettings(settings) {
     if (demoMode) {
       persistDemo({ settings });
       return settings;
     }
-    return (
-      await request("/api/settings", {
+    return normalizeSettings(
+      (
+        await request("/api/settings", {
         method: "PUT",
         body: JSON.stringify(settings),
-      })
-    ).settings;
+        })
+      ).settings,
+    );
   },
   async customers() {
     if (demoMode) {

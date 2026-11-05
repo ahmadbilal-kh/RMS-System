@@ -3,6 +3,7 @@ import Icon from '../components/Icon'
 import BrandMark from '../components/BrandMark'
 import BrandText from '../components/BrandText'
 import { demoMode } from '../lib/api'
+import { defaultSettings } from '../data/demoData'
 import { AdminOverviewPage } from './AdminOverviewPage'
 import { AdminBookingsPage } from './AdminBookingsPage'
 import { AdminMenuPage } from './AdminMenuPage'
@@ -21,7 +22,7 @@ const sections = [
 
 const pageForPath = (path) => sections.find((item) => item.path === path)?.key || 'overview'
 
-export default function AdminPage({ path, go, user, menu, bookings, customers, report, settings, onLogout, onBookingStatus, onSaveMenu, onUploadMenuImage, onDeleteMenu, onSaveSettings }) {
+export default function AdminPage({ path, go, user, menu, bookings, customers, report, settings = defaultSettings, onLogout, onBookingStatus, onSaveMenu, onUploadMenuImage, onDeleteMenu, onSaveSettings }) {
   const [mobileNav, setMobileNav] = useState(false)
   const active = pageForPath(path)
   const title = sections.find((section) => section.key === active)?.title || 'Overview'
