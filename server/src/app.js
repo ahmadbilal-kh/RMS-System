@@ -16,8 +16,10 @@ import { errorHandler, notFound } from './middleware/errors.js'
 configurePassport()
 
 const app = express()
-const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')
-const apiPublicUrl = (process.env.API_PUBLIC_URL || `http://localhost:${process.env.PORT || 4000}`).replace(/\/$/, '')
+const vercelHostname = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL
+const vercelOrigin = vercelHostname ? `https://${vercelHostname.replace(/^https?:\/\//, '')}` : ''
+const frontendUrl = (process.env.FRONTEND_URL || vercelOrigin || 'http://localhost:5173').replace(/\/$/, '')
+const apiPublicUrl = (process.env.API_PUBLIC_URL || vercelOrigin || `http://localhost:${process.env.PORT || 4000}`).replace(/\/$/, '')
 const production = process.env.NODE_ENV === 'production'
 
 if (production) app.set('trust proxy', 1)

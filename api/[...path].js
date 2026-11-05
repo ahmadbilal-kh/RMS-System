@@ -33,7 +33,11 @@ export default async function handler(request, response) {
     })
   } catch (error) {
     appPromise = undefined
-    console.error('DineNova API initialization failed:', error?.name || 'Error')
+    if (error?.message?.startsWith('Production configuration is incomplete:')) {
+      console.error('DineNova API configuration error:', error.message)
+    } else {
+      console.error('DineNova API initialization failed:', error?.name || 'Error', error?.code || '')
+    }
     return response.status(503).json({ message: 'The API is temporarily unavailable.' })
   }
 }

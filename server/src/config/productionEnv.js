@@ -45,20 +45,10 @@ function verifyProductionConfiguration(env) {
     errors.push('SESSION_SECRET must be a unique random secret with at least 32 characters.')
   }
 
-  const frontendOrigin = httpsOrigin('FRONTEND_URL', env.FRONTEND_URL, errors)
-  const apiOrigin = httpsOrigin('API_PUBLIC_URL', env.API_PUBLIC_URL, errors)
-
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
-    errors.push('RESEND_API_KEY and EMAIL_FROM are required for password-reset emails.')
-  } else {
-    const senderAddress = env.EMAIL_FROM.match(/<([^<>]+)>/)?.[1] || env.EMAIL_FROM.trim()
-    if (
-      !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(senderAddress) ||
-      /your-verified-domain\.com|your-real-domain|example\.(com|net|org)$/i.test(senderAddress)
-    ) {
-      errors.push('EMAIL_FROM must be an email address on a domain verified in Resend.')
-    }
-  }
+  const vercelHostname = env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL || ''
+  const vercelOrigin = vercelHostname ? `https://${vercelHostname.replace(/^https?:\/\//, '')}` : ''
+  const frontendOrigin = httpsOrigin('FRONTEND_URL', env.FRONTEND_URL || vercelOrigin, errors)
+  const apiOrigin = httpsOrigin('API_PUBLIC_URL', env.API_PUBLIC_URL || vercelOrigin, errors)
 
   const sameSite = (env.SESSION_COOKIE_SAMESITE || 'lax').toLowerCase()
   if (!['strict', 'lax', 'none'].includes(sameSite)) {

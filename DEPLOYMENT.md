@@ -15,7 +15,7 @@ For M10+, MongoDB's published example policy retains daily snapshots for 7 days,
 
 ## 2. Configure password-reset email
 
-The API sends password-reset codes with Resend. New accounts are signed in immediately and do not require email verification. In Resend, add a domain or sending subdomain you own, publish the DNS records it provides, wait for the domain to show as verified, then create an API key. Resend requires a verified domain to send email: [Resend Verified Domains](https://resend.com/docs/dashboard/domains/introduction).
+The API can send password-reset codes with Resend. Email delivery is optional and does not block the rest of the API from starting. New accounts are signed in immediately and do not require email verification. In Resend, add a domain or sending subdomain you own, publish the DNS records it provides, wait for the domain to show as verified, then create an API key. Resend requires a verified domain to send email: [Resend Verified Domains](https://resend.com/docs/dashboard/domains/introduction).
 
 In Vercel, add these as **Production-only** environment variables:
 
@@ -48,13 +48,13 @@ VITE_GOOGLE_OAUTH_ENABLED=false
 | Variable | Value |
 | --- | --- |
 | `NODE_ENV` | `production` |
-| `FRONTEND_URL` | Exact Vercel production origin, e.g. `https://dinenova.vercel.app` |
-| `API_PUBLIC_URL` | The same exact origin as `FRONTEND_URL` |
+| `FRONTEND_URL` | Optional exact frontend origin; defaults to Vercel's production URL |
+| `API_PUBLIC_URL` | Optional public API origin; defaults to Vercel's production URL |
 | `MONGODB_URI` | Production Atlas URI including a database name |
 | `SESSION_SECRET` | Unique random value with 32+ characters |
 | `SESSION_COOKIE_SAMESITE` | `lax` |
-| `RESEND_API_KEY` | Private Resend API key for password reset |
-| `EMAIL_FROM` | Sender address at the verified Resend domain |
+| `RESEND_API_KEY` | Optional private Resend API key for password reset |
+| `EMAIL_FROM` | Optional sender address at the verified Resend domain |
 | `ADMIN_EMAILS` | Owner email allowlist, especially for Google sign-in |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional; set both or leave both empty |
 | `GOOGLE_CALLBACK_URL` | If enabled: `https://dinenova.vercel.app/api/auth/google/callback` |
