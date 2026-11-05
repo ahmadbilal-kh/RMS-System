@@ -12,7 +12,14 @@ async function initializeApi() {
     import('./app.js'),
     import('./config/database.js'),
   ])
-  await connectDatabase()
+  try {
+    await connectDatabase()
+  } catch (error) {
+    console.error('DineNova MongoDB connection failed:', error?.name || 'Error', error?.code || '')
+    const databaseError = new Error('DATABASE_CONNECTION_FAILED')
+    databaseError.cause = error
+    throw databaseError
+  }
   return app
 }
 
@@ -35,6 +42,12 @@ export default async function handler(request, response) {
     appPromise = undefined
     if (error?.message?.startsWith('Production configuration is incomplete:')) {
       console.error('DineNova API configuration error:', error.message)
+      return response.status(503).json({ message: error.message })
+    }
+    if (error?.message === 'DATABASE_CONNECTION_FAILED') {
+      return response.status(503).json({
+        message: 'Database connection failed. Check MONGODB_URI and allow Vercel in MongoDB Atlas Network Access.',
+      })
     } else {
       console.error('DineNova API initialization failed:', error?.name || 'Error', error?.code || '')
     }
