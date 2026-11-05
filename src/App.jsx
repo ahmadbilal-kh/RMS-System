@@ -286,14 +286,17 @@ function App() {
   useEffect(() => {
     if (!ready) return;
     const needsAdmin = path.startsWith("/admin") && user?.role !== "admin";
-    const needsAccount = ["/my-bookings", "/profile"].includes(path) && !user;
+    const needsAccount = ["/booking", "/my-bookings", "/profile"].includes(path) && !user;
     if (!needsAdmin && !needsAccount) return;
     if (needsAdmin && user)
       setNotice(
         "This page is for restaurant staff. Sign in with an administrator account to continue.",
       );
-    if (needsAccount)
+    if (needsAccount) {
       window.sessionStorage.setItem("dinenova.return-path", path);
+      if (path === "/booking")
+        setNotice("Please sign in or create an account to reserve a table.");
+    }
     window.history.replaceState({}, "", "/login");
     setPath("/login");
   }, [path, user, ready]);
@@ -313,17 +316,20 @@ function App() {
     setNotice(
       `Welcome to ${settings.restaurantName}, ${nextUser.name.split(" ")[0]}! Your account is ready.`,
     );
-    go("/");
+    const returnPath = window.sessionStorage.getItem("dinenova.return-path");
+    window.sessionStorage.removeItem("dinenova.return-path");
+    go(nextUser.role === "admin" ? "/admin" : returnPath || "/");
     return result;
   };
   const verifyEmail = async (email, code) => {
     const nextUser = await api.verifyEmail(email, code);
     setUser(nextUser);
+    const returnPath = window.sessionStorage.getItem("dinenova.return-path");
     window.sessionStorage.removeItem("dinenova.return-path");
     setNotice(
       `Welcome to ${settings.restaurantName}, ${nextUser.name.split(" ")[0]}! Your account is ready.`,
     );
-    go("/");
+    go(returnPath || "/");
   };
   const resendVerification = async (email) => {
     return api.resendVerification(email);
@@ -425,6 +431,28 @@ function App() {
       </PublicLayout>
     );
   }
+
+  if (path === "/booking" && !user)
+    return (
+      <PublicLayout
+        path="/login"
+        go={go}
+        user={user}
+        settings={settings}
+        onLogout={logout}
+      >
+        <AuthPage
+          key="login"
+          mode="login"
+          onLogin={login}
+          onRegister={register}
+          onVerifyEmail={verifyEmail}
+          onResendVerification={resendVerification}
+          go={go}
+          initialMessage={notice}
+        />
+      </PublicLayout>
+    );
 
   if (path === "/admin" || path.startsWith("/admin/"))
     return (
