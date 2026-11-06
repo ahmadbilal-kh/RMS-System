@@ -88,9 +88,10 @@ router.get('/mine', requireAuth, wrap(async (request, response) => {
   return response.json({ bookings: bookings.map(serialize) })
 }))
 
-router.patch('/mine/:id', requireAuth, wrap(async (request, response) => {
-  if (!mongoose.isValidObjectId(request.params.id)) return response.status(404).json({ message: 'Reservation not found.' })
-  const booking = await Booking.findOne({ _id: request.params.id, $or: [{ customer: request.user._id }, { email: request.user.email }] })
+const updateMyBooking = wrap(async (request, response) => {
+  const id = request.params.id || request.body.id
+  if (!mongoose.isValidObjectId(id)) return response.status(404).json({ message: 'Reservation not found.' })
+  const booking = await Booking.findOne({ _id: id, $or: [{ customer: request.user._id }, { email: request.user.email }] })
   if (!booking) return response.status(404).json({ message: 'Reservation not found.' })
   if (booking.status === 'cancelled') return response.status(409).json({ message: 'Cancelled reservations cannot be edited.' })
   const parsed = customerUpdateSchema.safeParse(request.body)
@@ -99,27 +100,39 @@ router.patch('/mine/:id', requireAuth, wrap(async (request, response) => {
   Object.assign(booking, parsed.data, { status: 'pending' })
   await booking.save()
   return response.json({ booking: serialize(booking) })
-}))
+})
 
-router.delete('/mine/:id', requireAuth, wrap(async (request, response) => {
-  if (!mongoose.isValidObjectId(request.params.id)) return response.status(404).json({ message: 'Reservation not found.' })
-  const booking = await Booking.findOne({ _id: request.params.id, $or: [{ customer: request.user._id }, { email: request.user.email }] })
+router.patch('/mine-item', requireAuth, updateMyBooking)
+router.patch('/mine/:id', requireAuth, updateMyBooking)
+
+const deleteMyBooking = wrap(async (request, response) => {
+  const id = request.params.id || request.body.id
+  if (!mongoose.isValidObjectId(id)) return response.status(404).json({ message: 'Reservation not found.' })
+  const booking = await Booking.findOne({ _id: id, $or: [{ customer: request.user._id }, { email: request.user.email }] })
   if (!booking) return response.status(404).json({ message: 'Reservation not found.' })
   await booking.deleteOne()
   return response.json({ message: 'Reservation deleted.' })
-}))
+})
+
+router.delete('/mine-item', requireAuth, deleteMyBooking)
+router.delete('/mine/:id', requireAuth, deleteMyBooking)
 
 router.get('/', requireAdmin, wrap(async (_request, response) => {
   const bookings = await Booking.find().sort({ date: -1, time: -1 }).limit(500)
   return response.json({ bookings: bookings.map(serialize) })
 }))
 
-router.patch('/:id/status', requireAdmin, wrap(async (request, response) => {
+const updateBookingStatus = wrap(async (request, response) => {
+  const id = request.params.id || request.body.id
+  if (!mongoose.isValidObjectId(id)) return response.status(404).json({ message: 'Reservation not found.' })
   const parsed = statusSchema.safeParse(request.body)
   if (!parsed.success) return response.status(400).json({ message: 'Choose a valid reservation status.' })
-  const booking = await Booking.findByIdAndUpdate(request.params.id, { status: parsed.data.status }, { new: true, runValidators: true })
+  const booking = await Booking.findByIdAndUpdate(id, { status: parsed.data.status }, { new: true, runValidators: true })
   if (!booking) return response.status(404).json({ message: 'Reservation not found.' })
   return response.json({ booking: serialize(booking) })
-}))
+})
+
+router.patch('/status', requireAdmin, updateBookingStatus)
+router.patch('/:id/status', requireAdmin, updateBookingStatus)
 
 export default router

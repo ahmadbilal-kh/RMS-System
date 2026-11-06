@@ -354,9 +354,9 @@ export const api = {
       return updated;
     }
     return (
-      await request("/api/bookings/mine/" + id, {
+      await request("/api/bookings/mine-item", {
         method: "PATCH",
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, id }),
       })
     ).booking;
   },
@@ -375,7 +375,10 @@ export const api = {
       });
       return { message: "Reservation deleted." };
     }
-    return request("/api/bookings/mine/" + id, { method: "DELETE" });
+    return request("/api/bookings/mine-item", {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    });
   },
   async updateBooking(id, status) {
     if (demoMode) {
@@ -387,9 +390,9 @@ export const api = {
       return bookings.find((item) => item.id === id);
     }
     return (
-      await request("/api/bookings/" + id + "/status", {
+      await request("/api/bookings/status", {
         method: "PATCH",
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ id, status }),
       })
     ).booking;
   },
